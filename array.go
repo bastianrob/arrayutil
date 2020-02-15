@@ -25,7 +25,8 @@ func Contains(arr interface{}, clause interface{}) bool {
 //Reduce an array of something into another thing
 func Reduce(arr interface{}, initialValue interface{}, transform interface{}) (interface{}, error) {
 	arrV := reflect.ValueOf(arr)
-	if arrV.Kind() != reflect.Slice {
+	kind := arrV.Kind()
+	if kind != reflect.Slice && kind != reflect.Array {
 		return nil, fmt.Errorf("Input value is not an array")
 	}
 

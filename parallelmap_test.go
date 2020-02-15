@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestMap(t *testing.T) {
+func TestParallelMap(t *testing.T) {
 	type args struct {
 		arr       interface{}
 		transform interface{}
@@ -45,7 +45,7 @@ func TestMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Map(tt.args.arr, tt.args.transform)
+			got, err := ParallelMap(tt.args.arr, tt.args.transform)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Map() error = %v, wantErr %v", err, tt.wantErr)
 				return
