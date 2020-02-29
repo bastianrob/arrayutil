@@ -7,11 +7,11 @@ import (
 
 // ParallelMap an array of something into another thing using go routine
 // Example:
-//  Map([]int{1,2,3}, func(num int) int { return num+1 })
+//  Map([]int{1,2,3}, func(num int) int { return num+1 }, reflect.Type(1))
 //	Results: []int{2,3,4}
-func ParallelMap(arr interface{}, transform interface{}) (interface{}, error) {
-	arrV := reflect.ValueOf(arr)
-	kind := arrV.Kind()
+func ParallelMap(source interface{}, transform interface{}, T reflect.Type) (interface{}, error) {
+	srcV := reflect.ValueOf(source)
+	kind := srcV.Kind()
 	if kind != reflect.Slice && kind != reflect.Array {
 		return nil, ErrMapSourceNotArray
 	}
@@ -25,12 +25,19 @@ func ParallelMap(arr interface{}, transform interface{}) (interface{}, error) {
 		return nil, ErrMapTransformNotFunc
 	}
 
-	wg := &sync.WaitGroup{}
-	wg.Add(arrV.Len())
+	if T == nil {
+		return nil, ErrMapResultTypeNil
+	}
 
-	entryT := reflect.TypeOf(arr).Elem()
-	result := reflect.MakeSlice(reflect.SliceOf(entryT), arrV.Len(), arrV.Cap())
-	for i := 0; i < arrV.Len(); i++ {
+	// kinda equivalent to = make([]T, srcv.Len())
+	result := reflect.MakeSlice(reflect.SliceOf(T), srcV.Len(), srcV.Cap())
+
+	// create a waitgroup with length = source array length
+	// we'll reduce the counter each time an entry finished processing
+	wg := &sync.WaitGroup{}
+	wg.Add(srcV.Len())
+	for i := 0; i < srcV.Len(); i++ {
+		// one go routine for each entry
 		go func(idx int, entry reflect.Value) {
 			//Call the transformation and store the result value
 			tfResults := tv.Call([]reflect.Value{entry})
@@ -40,12 +47,12 @@ func ParallelMap(arr interface{}, transform interface{}) (interface{}, error) {
 			if len(tfResults) > 0 {
 				resultEntry.Set(tfResults[0])
 			} else {
-				resultEntry.Set(reflect.Zero(entryT))
+				resultEntry.Set(reflect.Zero(T))
 			}
 
 			//this go routine is done
 			wg.Done()
-		}(i, arrV.Index(i))
+		}(i, srcV.Index(i))
 	}
 
 	wg.Wait()

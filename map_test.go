@@ -9,6 +9,7 @@ func TestMap(t *testing.T) {
 	type args struct {
 		arr       interface{}
 		transform interface{}
+		t         reflect.Type
 	}
 	tests := []struct {
 		name    string
@@ -38,14 +39,14 @@ func TestMap(t *testing.T) {
 			name: "Valid transform",
 			args: args{arr: []int{1, 2, 3}, transform: func(num int) int {
 				return num + 1
-			}},
+			}, t: reflect.TypeOf(1)},
 			want:    []int{2, 3, 4},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Map(tt.args.arr, tt.args.transform)
+			got, err := Map(tt.args.arr, tt.args.transform, tt.args.t)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Map() error = %v, wantErr %v", err, tt.wantErr)
 				return
